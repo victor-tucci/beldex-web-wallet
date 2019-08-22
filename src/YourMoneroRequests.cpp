@@ -43,7 +43,7 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     json j_response;
     json j_request;
 
-    vector<string> required_values {"address", "view_key"};
+    std::vector<string> required_values {"address", "view_key"};
 
     if (!parse_request(body, required_values, j_request, j_response))
     {
