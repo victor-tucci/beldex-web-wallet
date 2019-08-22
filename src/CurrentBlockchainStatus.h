@@ -72,7 +72,7 @@ public:
     update_current_blockchain_height();
 
     virtual bool
-    init_loki_blockchain();
+    init_beldex_blockchain();
 
     // inject TxUnlockChecker object
     // its simplifies mocking its behavior in our
@@ -277,7 +277,7 @@ public:
 
 protected:
 
-    // parameters used to connect/read loki blockchain
+    // parameters used to connect/read beldex blockchain
     BlockchainSetup bc_setup;
 
     // since this class monitors current status

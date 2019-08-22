@@ -27,3 +27,13 @@ set(SOURCE_FILES
 add_library(myxrm
 		STATIC
 		${SOURCE_FILES})
+
+target_link_libraries(myxrm 
+    PUBLIC
+    ${restbed_LIBRARY}
+    ${MYSQLPP_LIBRARIES})
+
+target_include_directories(myxrm 
+    PUBLIC
+    ${restbed_INCLUDE}
+${MYSQLPP_INCLUDE_DIRS})

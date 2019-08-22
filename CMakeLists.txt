@@ -1,7 +1,10 @@
+#define _GLIBCXX_USE_CXX11_ABI 0/1
 cmake_minimum_required(VERSION 3.2)
 
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(PROJECT_NAME
-        loki-locker)
+        beldex-web-wallet)
 
 project(${PROJECT_NAME})
 
@@ -11,15 +14,15 @@ if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
 endif()
 
-if (NOT LOKI_DIR)
-    set(LOKI_DIR ~/loki)
+if (NOT BELDEX_DIR)
+    set(BELDEX_DIR ~/beldex)
 endif()
 
 option(BUILD_TEST "Build tests for the project" OFF)
 
-message(STATUS LOKI_DIR ": ${LOKI_DIR}")
+message(STATUS BELDEX_DIR ": ${BELDEX_DIR}")
 
-set(MONERO_SOURCE_DIR ${LOKI_DIR}
+set(MONERO_SOURCE_DIR ${BELDEX_DIR}
         CACHE PATH "Path to the root directory for Monero")
 
 # set location of monero build tree
@@ -49,17 +52,14 @@ endif()
 
 find_package(Monero)
 
-find_package(MYSQL)
+find_package(MySQL++)
 
-if (NOT MYSQL_INCLUDE_DIR)
-    message(SEND_ERROR "MySQL libraries not found! Please install mysql++/mysqlpp libraries")
-    return()
-endif()
-
-include_directories(${MYSQL_INCLUDE_DIR})
+include_directories(${MYSQLPP_INCLUDE_DIR})
 
 # include boost headers
 include_directories(${Boost_INCLUDE_DIRS})
+
+
 
 # include monero headers
 include_directories("ext/restbed/source")
@@ -68,12 +68,17 @@ include_directories(
     ${MONERO_SOURCE_DIR}/build
     /usr/local/include
     /usr/local/include/mysql
+    #/usr/lib/mysql
+    /usr/include/mysql++
+    /usr/include/mysql
     /usr/local/opt/openssl/include
 )
 
 link_directories(
     ${MONERO_BUILD_DIR}/src/crypto
     /usr/local/lib
+    /usr/include/mysql++
+    /usr/include/mysql
     /usr/local/opt/openssl/lib
 )
 
@@ -109,6 +114,7 @@ set(SOURCE_FILES
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES})
 
+
 set(LIBRARIES
         myxrm
         myext
@@ -131,7 +137,6 @@ set(LIBRARIES
         mysqlpp
         mysqlclient
         device
-        randomx
         epee
         checkpoints
         version       
@@ -142,7 +147,7 @@ set(LIBRARIES
         curl
         cncrypto
         ssl
-        crypto)
+crypto)
 
 if(APPLE)
     set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework Foundation")

@@ -29,6 +29,8 @@ class RPCCalls
 
     epee::net_utils::http::http_simple_client m_http_client;
 
+    // epee::net_utils::ssl_support_t;
+
     std::mutex m_daemon_rpc_mutex;
 
     string port;
