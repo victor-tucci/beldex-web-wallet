@@ -10,6 +10,7 @@
 #include "ssqlses.h"
 #include "OutputInputIdentification.h"
 
+
 namespace xmreg
 {
 
@@ -43,10 +44,12 @@ YourMoneroRequests::login(const shared_ptr<Session> session, const Bytes & body)
     json j_response;
     json j_request;
 
-    vector<string> required_values {"address", "view_key"};
-
+    std::vector<string> required_values {"address", "view_key"};
+    for (auto it = required_values.begin(); it != required_values.end(); it++) 
+        cout << *it << " "; 
     if (!parse_request(body, required_values, j_request, j_response))
     {
+        std::cout<<"inside if"<<'\n';
         session_close(session, j_response.dump());
         return;
     }
