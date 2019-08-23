@@ -1,4 +1,4 @@
-# Loki Locker - a lightweight web wallet for Loki based on OpenMonero 
+# Beldex Wallet - a lightweight web wallet for Loki based on OpenMonero 
 
 In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
 demonstrate how to provide Loki related JSON REST service. For this purpose,
@@ -27,16 +27,6 @@ to MyMonero. They include:
  - legacy address + payment_id system replaced with integrated addresses for better privacy.
  - free, time based imports of recent transactions added.
 
-
-## Current development version
-
-All current changes, bug fixes and updates are done in the
-[branch](https://github.com/moneroexamples/lokilocker/tree/devel).
-
-
-## Screenshot
-
-![Loki Locker](screenshot/screen1.png)
 
 
 ## Host it yourself
