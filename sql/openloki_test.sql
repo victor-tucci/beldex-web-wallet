@@ -20,11 +20,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
-<<<<<<< HEAD:sql/openbeldex_test.sql
 -- Database: `openbeldex_test`
-=======
--- Database: `openloki_test`
->>>>>>> 916938344212c3368e2f1e8dc60ec8fdbaf5e5a2:sql/openloki_test.sql
 --
 
 CREATE DATABASE IF NOT EXISTS `openmonero_test` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;

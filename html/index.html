@@ -36,9 +36,6 @@
     <script src="bower_components/ng-clip/dist/ng-clip.min.js"></script>
     <script src="bower_components/moment/min/moment-with-locales.min.js"></script>
     <script src="js/webflow.js"></script>
-    <script
-src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/4.13.0/bodymovin.js"
-type="text/javascript"></script>
     <script src="js/crc32.js"></script>
     <script src="js/mnemonic.js"></script>
     <script src="js/lib/qrcode.min.js"></script>
@@ -76,9 +73,8 @@ type="text/javascript"></script>
     <script src="js/directives/qr_code.js"></script>
     <script src="js/directives/modal.js"></script>
     <script src="js/directives/transaction.js"></script>
-    <script src="js/directives/clipboard.js"></script>
     <!--<script src="js/directives/forms.js"></script>-->
-    <script src="js/routes.js"></script>
+    <script src="js/routes.js?4"></script>
 </head>
 
 <body ng-controller="AccountCtrl">
@@ -111,8 +107,8 @@ type="text/javascript"></script>
             <div class="w-icon-nav-menu"></div>
         </div>
         <a class="w-nav-brand brand-box" ng-href="{{loggedIn() ? '#!/overview' : '#!/'}}">
-            <img class="nav-logo" src="images/loki_logo.svg"/>
-            <span style="font-size: 32px; color: white;">LOKI LOCKER</span>
+            <span style="font-size: 32px; font-weight: bold;">LOKI WEB WALLET</span>
+            <span style="color:white" ng-show="nettype == 0"><br/>mainnet loki network</span>
             <span style="color:white" ng-show="nettype == 1"><br/>testnet loki network</span>
             <span style="color:white" ng-show="nettype == 2"><br/>stagenet loki network</span>
         </a>
@@ -128,31 +124,10 @@ type="text/javascript"></script>
         <div class="w-container">
             <div class="w-row">
                 <div class="w-col w-col-4 middle-footer">
-                    <div class="copyright-text">
-                        Copyright, Loki Locker 2018
-                    </div>
+                    <div class="copyright-text"><a class="footer-link"  href="https://github.com/loki-project/loki-web-wallet">Source code</a></div>
                 </div>
-
-                <div class="w-col w-col-4 middle-footer social">  
-                    <div class="social-desktop">       
-                        <ul>
-                            <li><a href="https://bitcointalk.org/index.php?topic=3016125.0"><i class="fab fa-btc"></i></a></li>
-                            <li><a href="https://github.com/loki-project/loki-locker"><i class="fab fa-github"></i></a></li>
-                            <li><a href="https://discordapp.com/invite/67GXfD6"><i class="fab fa-discord"></i></a></li>
-                            <li><a href="https://t.me/joinchat/DeNvR0JJ4JPn6TVSQjCsZQ/"><i class="fab fa-telegram"></i></a></li>
-                            <li><a href="https://twitter.com/loki_project"><i class="fab fa-twitter"></i></a></li>
-                            <li><a href="https://www.reddit.com/r/LokiProject/"><i class="fab fa-reddit"></i></a></li>
-                            <li><a href="https://www.youtube.com/lokinetwork"><i class="fab fa-youtube"></i> </a></li>
-                            <li><a href="https://www.facebook.com/LokiNetwork/"><i class="fab fa-facebook"></i> </a></li>
-                        </ul>
-                    </div>
-
-                    <div class ="social-mobile">
-                        <a href="https://discordapp.com/invite/67GXfD6"><i class="fab fa-discord"></i></a>
-                        <a href="https://t.me/joinchat/DeNvR0JJ4JPn6TVSQjCsZQ/"><i class="fab fa-telegram"></i></a>
-                        <a href="https://github.com/loki-project/loki-locker"><i class="fab fa-github"></i></a>
-                        <a href="https://twitter.com/loki_project"><i class="fab fa-twitter"></i></a>
-                    </div>
+                <div class="w-clearfix footer-link">
+                    The frontend is adapted from <a class="footer-link"  style="margin-left: 0; float: none;" href="https://mymonero.com"> MyMonero</a>
                 </div>
 
                 <div class="w-col w-col-4 bottom-footer-column">

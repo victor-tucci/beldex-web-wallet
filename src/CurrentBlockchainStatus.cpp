@@ -73,6 +73,10 @@ CurrentBlockchainStatus::update_current_blockchain_height()
 bool
 CurrentBlockchainStatus::init_beldex_blockchain()
 {
+    // set loki log output level
+    uint32_t log_level = 0;
+    mlog_configure(mlog_get_default_log_path(""), true);
+
     // initialize the core using the blockchain path
     return mcore->init(bc_setup.blockchain_path, bc_setup.net_type);}
 
@@ -736,7 +740,7 @@ CurrentBlockchainStatus::start_tx_search_thread(
     }
     catch (const std::exception& e)
     {
-        OMERROR << "Faild created a search thread: " << e.what();
+        cerr << "Failed creating a search thread: " << e.what() << endl;
         return false;
     }
 

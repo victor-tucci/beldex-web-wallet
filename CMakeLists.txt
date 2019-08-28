@@ -139,8 +139,7 @@ set(LIBRARIES
         device
         epee
         checkpoints
-        version       
-        sodium
+        version
         ${Boost_LIBRARIES}
         pthread
         unbound
@@ -152,7 +151,7 @@ crypto)
 if(APPLE)
     set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework Foundation")
 else()
-    set(LIBRARIES ${LIBRARIES} atomic)
+    set(LIBRARIES ${LIBRARIES} atomic pcsclite)
 endif()
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)

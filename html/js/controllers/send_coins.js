@@ -125,9 +125,30 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
     $scope.submitting = false;
     $scope.targets = [{}];
     $scope.totalAmount = JSBigInt.ZERO;
+    $scope.view_only = AccountService.isViewOnly();
 
     $scope.success_page = false;
     $scope.sent_tx = {};
+
+    var mixins = config.defaultMixin;
+
+    var view_only = AccountService.isViewOnly();
+
+    var explorerUrl = "";
+
+    if (config.nettype == 0)
+        explorerUrl = config.mainnetExplorerUrl;
+    else if (config.nettype == 1)
+        explorerUrl = config.testnetExplorerUrl;
+    else
+        explorerUrl = config.stagenetExplorerUrl;
+
+    // few multipliers based on uint64_t wallet2::get_fee_multiplier
+    var fee_multipliers = [1, 4, 20, 166];
+
+    var default_priority = 2;
+
+    $scope.priority = default_priority.toString();
 
     $scope.openaliasDialog = undefined;
 
@@ -157,6 +178,51 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
         return deferred.promise;
     }
 
+    $scope.transferConfirmDialog = undefined;
+
+    function confirmTransfer(address, amount, tx_hash, fee, tx_prv_key,
+                             payment_id, priority, txBlobKBytes, raw_tx,
+                             no_inputs, no_outputs) {
+
+        var deferred = $q.defer();
+
+        if ($scope.transferConfirmDialog !== undefined) {
+            deferred.reject("transferConfirmDialog is already being shown!");
+            return;
+        }
+
+        var priority_names = ["Low", "Medium", "High", "Paranoid"];
+
+        $scope.transferConfirmDialog = {
+            address: address,
+            fee: fee,
+            tx_hash: tx_hash,
+            amount: amount,
+            tx_prv_key: tx_prv_key,
+            payment_id: payment_id,
+            mixin: mixins + 1,
+            raw_tx: raw_tx,
+            no_inputs: no_inputs,
+            no_outputs: no_outputs,
+            txBlobKBytes: Math.round(txBlobKBytes*1e3) / 1e3,
+            priority: priority_names[priority - 1],
+            confirm: function() {
+                $scope.transferConfirmDialog = undefined;
+                deferred.resolve();
+            },
+            cancel: function() {
+                $scope.transferConfirmDialog = undefined;
+                deferred.reject("Transfer canceled by user");
+            }
+        };
+        return deferred.promise;
+    }
+
+    function getTxCharge(amount) {
+        amount = new JSBigInt(amount);
+        // amount * txChargeRatio
+        return amount.divide(1 / config.txChargeRatio);
+    }
 
     $scope.removeTarget = function(index) {
         $scope.targets.splice(index, 1);
@@ -179,6 +245,111 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
         $scope.sent_tx = {};
     };
 
+    $scope.sendCoins = function(targets, payment_id) {
+        if ($scope.submitting) return;
+        $scope.status = "";
+        $scope.error = "";
+        $scope.submitting = true;
+        var rct = true; //maybe want to set this later based on inputs (?)
+        var realDsts = [];
+        var targetPromises = [];
+        for (var i = 0; i < targets.length; ++i) {
+            var target = targets[i];
+            if (!target.address && !target.amount) {
+                continue;
+            }
+            var deferred = $q.defer();
+            targetPromises.push(deferred.promise);
+            (function(deferred, target) {
+                var amount;
+                try {
+                    amount = cnUtil.parseMoney(target.amount);
+                } catch (e) {
+                    deferred.reject("Failed to parse amount (#" + i + ")");
+                    return;
+                }
+                if (target.address.indexOf('.') === -1) {
+                    try {
+                        // verify that the address is valid
+                        cnUtil.decode_address(target.address);
+                        deferred.resolve({
+                            address: target.address,
+                            amount: amount
+                        });
+                    } catch (e) {
+                        deferred.reject("Failed to decode address (#" + i + "): " + e);
+                        return;
+                    }
+                } else {
+                    var domain = target.address.replace(/@/g, ".");
+                    ApiCalls.get_txt_records(domain)
+                        .then(function(response) {
+                            var data = response.data;
+                            var records = data.records;
+                            var oaRecords = [];
+                            console.log(domain + ": ", data.records);
+                            if (data.dnssec_used) {
+                                if (data.secured) {
+                                    console.log("DNSSEC validation successful");
+                                } else {
+                                    deferred.reject("DNSSEC validation failed for " + domain + ": " + data.dnssec_fail_reason);
+                                    return;
+                                }
+                            } else {
+                                console.log("DNSSEC Not used");
+                            }
+                            for (var i = 0; i < records.length; i++) {
+                                var record = records[i];
+                                if (record.slice(0, 4 + config.openAliasPrefix.length + 1) !== "oa1:" + config.openAliasPrefix + " ") {
+                                    continue;
+                                }
+                                console.log("Found OpenAlias record: " + record);
+                                oaRecords.push(parseOpenAliasRecord(record));
+                            }
+                            if (oaRecords.length === 0) {
+                                deferred.reject("No OpenAlias records found for: " + domain);
+                                return;
+                            }
+                            if (oaRecords.length !== 1) {
+                                deferred.reject("Multiple addresses found for given domain: " + domain);
+                                return;
+                            }
+                            console.log("OpenAlias record: ", oaRecords[0]);
+                            var oaAddress = oaRecords[0].address;
+                            try {
+                                cnUtil.decode_address(oaAddress);
+                                confirmOpenAliasAddress(domain, oaAddress,
+                                    oaRecords[0].name, oaRecords[0].description,
+                                    data.dnssec_used && data.secured)
+                                    .then(function() {
+                                        deferred.resolve({
+                                            address: oaAddress,
+                                            amount: amount,
+                                            domain: domain
+                                        });
+                                }, function(err) {
+                                    deferred.reject(err);
+                                });
+                            } catch (e) {
+                                deferred.reject("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
+                                return;
+                            }
+                        }, function(data) {
+                            deferred.reject("Failed to resolve DNS records for '" + domain + "': " + "Unknown error");
+                        });
+                }
+            })(deferred, target);
+        }
+
+        var strpad = function(org_str, padString, length)
+        {   // from http://stackoverflow.com/a/10073737/248823
+            var str = org_str;
+            while (str.length < length)
+                str = padString + str;
+            return str;
+        };
+
+        // Transaction will need at least 1KB fee (13KB for RingCT)
 
     $scope.sendCoins = function(targets, payment_id)
     {
@@ -192,8 +363,30 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
         //
         mymonero_core_js.monero_utils_promise.then(function(coreBridge_instance)
         {
-            if (targets.length > 1) {
-                throw "Loki Locker currently only supports one target"
+            $scope.submitting = false;
+            $scope.error = "Priority is not between 1 and 4";
+            return;
+        }
+
+        var fee_multiplier = fee_multipliers[priority - 1]; // default is 4
+
+        var neededFee = rct ? feePerKB.multiply(13) : feePerKB;
+        var totalAmountWithoutFee;
+        var unspentOuts;
+        var pid_encrypt = false; //don't encrypt payment ID unless we find an integrated one
+
+        $q.all(targetPromises).then(function(destinations) {
+            totalAmountWithoutFee = new JSBigInt(0);
+            for (var i = 0; i < destinations.length; i++) {
+                totalAmountWithoutFee = totalAmountWithoutFee.add(destinations[i].amount);
+            }
+            realDsts = destinations;
+            console.log("Parsed destinations: " + JSON.stringify(realDsts));
+            console.log("Total before fee: " + cnUtil.formatMoney(totalAmountWithoutFee));
+            if (realDsts.length === 0) {
+                $scope.submitting = false;
+                $scope.error = "You need to enter a valid destination";
+                return;
             }
             const target = targets[0]
             if (!target.address && !target.amount) {
@@ -228,24 +421,35 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 $scope.status = "Canceled";
                 $scope.submitting = false;
             }
-            var sweeping = targets[0].sendAll === true ? true : false; // default false, i.e. non-existence of UI element to set the flag
-            var amount = sweeping ? 0 : target.amount;
-            if (target.address.indexOf('.') !== -1) {
-                var domain = target.address.replace(/@/g, ".");
-                $http.post(config.apiUrl + "get_txt_records", {
-                    domain: domain
-                }).then(function(data) {
-                    var data = data.data;
-                    var records = data.records;
-                    var oaRecords = [];
-                    console.log(domain + ": ", data.records);
-                    if (data.dnssec_used) {
-                        if (data.secured) {
-                            console.log("DNSSEC validation successful");
-                        } else {
-                            fn("DNSSEC validation failed for " + domain + ": " + data.dnssec_fail_reason, null);
-                            return;
-                        }
+            var getUnspentOutsRequest = {
+                address: AccountService.getAddress(),
+                view_key: AccountService.getViewKey(),
+                amount: '0',
+                mixin: mixins,
+                // Use dust outputs only when we are using no mixins
+                use_dust: mixins === 0,
+                dust_threshold: config.dustThreshold.toString()
+            };
+
+            ApiCalls.get_unspent_outs(getUnspentOutsRequest)
+                .then(function(request) {
+                    var data = request.data;
+                    unspentOuts = checkUnspentOuts(data.outputs || []);
+                    unused_outs = unspentOuts.slice(0);
+                    using_outs = [];
+                    using_outs_amount = new JSBigInt(0);
+                    if (data.per_kb_fee)
+                    {
+                        feePerKB = new JSBigInt(data.per_kb_fee);
+                        neededFee = feePerKB.multiply(13).multiply(fee_multiplier);
+                    }
+                    transfer().then(transferSuccess, transferFailure);
+                }, function(data) {
+                    $scope.status = "";
+                    $scope.submitting = false;
+                    if (data && data.Error) {
+                        $scope.error = data.Error;
+                        console.warn(data.Error);
                     } else {
                         console.log("DNSSEC Not used");
                     }
@@ -296,24 +500,142 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 });
                 return
             }
-            // loki address (incl subaddresses):
-            try {
-                // verify that the address is valid
-                coreBridge_instance.decode_address(target.address, config.nettype);
-            } catch (e) {
-                fn("Failed to decode address with error: " + e);
+            console.log(txBlobBytes + " bytes <= " + numKB + " KB (current fee: " + cnUtil.formatMoneyFull(prevFee) + ")");
+            neededFee = feePerKB.multiply(numKB).multiply(fee_multiplier);
+            // if we need a higher fee
+            if (neededFee.compare(prevFee) > 0) {
+                console.log("Previous fee: " + cnUtil.formatMoneyFull(prevFee) + " New fee: " + cnUtil.formatMoneyFull(neededFee));
+                transfer().then(transferSuccess, transferFailure);
                 return;
             }
-            sendTo(target.address, amount, null /*domain*/);
-            //
-            function sendTo(target_address, amount, domain/*may be null*/)
-            {
-                const mixin = 9; // mandatory fixed mixin for Loki
-                let statusUpdate_messageBase = sweeping ? `Sending wallet balance…` : `Sending ${amount} LOKI…`
-                function _configureWith_statusUpdate(str, code)
+
+            // generated with correct per-kb fee
+            console.log("Successful tx generation, submitting tx");
+            console.log("Tx hash: " + tx_hash);
+            $scope.status = "Submitting...";
+            var request = {
+                address: AccountService.getAddress(),
+                view_key: AccountService.getViewKey(),
+                tx: raw_tx
+            };
+
+
+            confirmTransfer(realDsts[0].address, realDsts[0].amount,
+                            tx_hash, neededFee, tx_prvkey, payment_id,
+                            priority, txBlobKBytes, raw_tx,
+                            no_inputs, no_outputs).then(function() {
+
+                //alert('Confirmed ');
+
+                ApiCalls.submit_raw_tx(request.address, request.view_key, request.tx)
+                    .then(function(response) {
+
+                        var data = response.data;
+
+                        if (data.status === "error")
+                        {
+                            $scope.status = "";
+                            $scope.submitting = false;
+                            $scope.error = "Something unexpected occurred when submitting your transaction: " + data.error;
+                            return;
+                        }
+
+                        //console.log("Successfully submitted tx");
+                        $scope.targets = [{}];
+                        $scope.sent_tx = {
+                            address: realDsts[0].address,
+                            domain: realDsts[0].domain,
+                            amount: realDsts[0].amount,
+                            payment_id: payment_id,
+                            tx_id: tx_hash,
+                            tx_prvkey: tx_prvkey,
+                            tx_fee: neededFee/*.add(getTxCharge(neededFee))*/,
+                            explorerLink: explorerUrl + "tx/" + tx_hash
+                        };
+
+                        $scope.success_page = true;
+                        $scope.status = "";
+                        $scope.submitting = false;
+                    }, function(error) {
+                        $scope.status = "";
+                        $scope.submitting = false;
+                        $scope.error = "Something unexpected occurred when submitting your transaction: ";
+                    });
+
+            }, function(reason) {
+                //alert('Failed: ' + reason);
+                transferFailure("Transfer canceled");
+            });
+
+
+        }
+
+        function transferFailure(reason) {
+            $scope.status = "";
+            $scope.submitting = false;
+            $scope.error = reason;
+            console.log("Transfer failed: " + reason);
+        }
+
+        var unused_outs;
+        var using_outs;
+        var using_outs_amount;
+
+        function random_index(list) {
+            return Math.floor(Math.random() * list.length);
+        }
+
+        function pop_random_value(list) {
+            var idx = random_index(list);
+            var val = list[idx];
+            list.splice(idx, 1);
+            return val;
+        }
+
+        function select_outputs(target_amount) {
+            console.log("Selecting outputs to use. Current total: " + cnUtil.formatMoney(using_outs_amount) + " target: " + cnUtil.formatMoney(target_amount));
+            while (using_outs_amount.compare(target_amount) < 0 && unused_outs.length > 0) {
+                var out = pop_random_value(unused_outs);
+                if (!rct && out.rct) {continue;} //skip rct outs if not creating rct tx
+                using_outs.push(out);
+                using_outs_amount = using_outs_amount.add(out.amount);
+                console.log("Using output: " + cnUtil.formatMoney(out.amount) + " - " + JSON.stringify(out));
+            }
+        }
+
+        function transfer() {
+            var deferred = $q.defer();
+            (function() {
+                var dsts = realDsts.slice(0);
+                // Calculate service charge and add to tx destinations
+                //var chargeAmount = getTxCharge(neededFee);
+                //dsts.push({
+                //    address: config.txChargeAddress,
+                //    amount: chargeAmount
+                //});
+                // Add fee to total amount
+                var totalAmount = totalAmountWithoutFee.add(neededFee)/*.add(chargeAmount)*/;
+                console.log("Balance required: " + cnUtil.formatMoneySymbol(totalAmount));
+
+                select_outputs(totalAmount);
+
+                //compute fee as closely as possible before hand
+                if (using_outs.length > 1 && rct)
                 {
-                    console.log("Step:", str)
-                    $scope.status = str
+                    var newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixins, 2) / 1024)).multiply(feePerKB).multiply(fee_multiplier);
+                    totalAmount = totalAmountWithoutFee.add(newNeededFee);
+                    //add outputs 1 at a time till we either have them all or can meet the fee
+                    while (using_outs_amount.compare(totalAmount) < 0 && unused_outs.length > 0)
+                    {
+                        var out = pop_random_value(unused_outs);
+                        using_outs.push(out);
+                        using_outs_amount = using_outs_amount.add(out.amount);
+                        console.log("Using output: " + cnUtil.formatMoney(out.amount) + " - " + JSON.stringify(out));
+                        newNeededFee = JSBigInt(Math.ceil(cnUtil.estimateRctSize(using_outs.length, mixins, 2) / 1024)).multiply(feePerKB).multiply(fee_multiplier);
+                        totalAmount = totalAmountWithoutFee.add(newNeededFee);
+                    }
+                    console.log("New fee: " + cnUtil.formatMoneySymbol(newNeededFee) + " for " + using_outs.length + " inputs");
+                    neededFee = newNeededFee;
                 }
                 //
                 _configureWith_statusUpdate(statusUpdate_messageBase);
@@ -348,71 +670,89 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         {
                             cb(err_msg, res);
                         });
-                    },
-                    get_random_outs_fn: function(req_params, cb)
-                    {
-                        apiClient.RandomOuts(req_params, function(err_msg, res)
+                    }
+                }
+                else if (using_outs_amount.compare(totalAmount) === 0 && rct)
+                {
+                    //create random destination to keep 2 outputs always in case of 0 change
+                    var fakeAddress = cnUtil.create_address(cnUtil.random_scalar()).public_addr;
+                    console.log("Sending 0 LOKI to a fake address to keep tx uniform (no change exists): " + fakeAddress);
+                    dsts.push({
+                        address: fakeAddress,
+                        amount: 0
+                    });
+                }
+
+                var amounts = [];
+                for (var l = 0; l < using_outs.length; l++)
+                {
+                    amounts.push(using_outs[l].rct ? "0" : using_outs[l].amount.toString());
+                    //amounts.push("0");
+                }
+                var request = {
+                    amounts: amounts,
+                    count: mixins + 1 // Add one to mixin so we can skip real output key if necessary
+                };
+
+                ApiCalls.get_random_outs(request.amounts, request.count)
+                    .then(function(response) {
+                        var data = response.data;
+
+                        if (data.status === "error")
                         {
-                            cb(err_msg, res);
-                        });
-                    },
-                    submit_raw_tx_fn: function(req_params, cb)
-                    {
-                        apiClient.SubmitRawTx(req_params, function(err_msg, res)
+                            $scope.status = "";
+                            $scope.submitting = false;
+                            $scope.error = "Failed to create transaction: " + data.error;
+                            return;
+                        }
+
+                        createTx(data.amount_outs);
+                    }, function(data) {
+                        deferred.reject('Failed to get unspent outs');
+                    });
+
+                // Create & serialize transaction
+                function createTx(mix_outs)
+                {
+                    var signed;
+                    try {
+                        console.log('Destinations: ');
+                        cnUtil.printDsts(dsts);
+                        //need to get viewkey for encrypting here, because of splitting and sorting
+                        if (pid_encrypt)
                         {
-                            cb(err_msg, res);
-                        });
-                    },
-                    //
-                    status_update_fn: function(params)
-                    {
-                        let suffix = mymonero_core_js.monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[params.code]
-                        _configureWith_statusUpdate(
-                            statusUpdate_messageBase + " " + suffix, // TODO: localize this concatenation
-                            params.code
-                        )
-                    },
-                    error_fn: function(params)
-                    {
-                        fn(params.err_msg)
-                    },
-                    success_fn: function(params)
-                    {
-                        const total_sent__JSBigInt = new JSBigInt(params.total_sent)
-                        const tx_fee = new JSBigInt(params.used_fee)
-                        const total_sent__atomicUnitString = total_sent__JSBigInt.toString()
-                        const total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt)
-                        const total_sent__float = parseFloat(total_sent__floatString)
-                        //
-                        const mockedTransaction =
-                        {
-                            hash: params.tx_hash,
-                            mixin: "" + params.mixin,
-                            coinbase: false,
-                            mempool: true, // is that correct?
-                            //
-                            isJustSentTransaction: true, // this is set back to false once the server reports the tx's existence
-                            timestamp: new Date(), // faking
-                            //
-                            unlock_time: 0,
-                            //
-                            // height: null, // mocking the initial value -not- to exist (rather than to erroneously be 0) so that isconfirmed -> false
-                            //
-                            total_sent: new JSBigInt(total_sent__atomicUnitString),
-                            total_received: new JSBigInt("0"),
-                            //
-                            approx_float_amount: -1 * total_sent__float, // -1 cause it's outgoing
-                            // amount: new JSBigInt(sentAmount), // not really used (note if you uncomment, import JSBigInt)
-                            //
-                            payment_id: params.final_payment_id, // b/c `payment_id` may be nil of short pid was used to fabricate an integrated address
-                            //
-                            // info we can only preserve locally
-                            tx_fee: tx_fee,
-                            tx_key: params.tx_key,
-                            tx_pub_key: params.tx_pub_key,
-                            target_address: target_address, // only we here are saying it's the target
-                        };
-                        fn(null, mockedTransaction, domain)
+                            var realDestViewKey = cnUtil.decode_address(dsts[0].address).view;
+                        }
+
+                        var splittedDsts = cnUtil.decompose_tx_destinations(dsts, rct);
+
+                        console.log('Decomposed destinations:');
+
+                        cnUtil.printDsts(splittedDsts);
+
+                        signed = cnUtil.create_transaction(
+                            AccountService.getPublicKeys(),
+                            AccountService.getSecretKeys(),
+                            splittedDsts, using_outs,
+                            mix_outs, mixins, neededFee,
+                            payment_id, pid_encrypt,
+                            realDestViewKey, 0, rct);
+
+                    } catch (e) {
+                        deferred.reject("Failed to create transaction: " + e);
+                        return;
+                    }
+                    console.log("signed tx: ", JSON.stringify(signed));
+                    //move some stuff here to normalize rct vs non
+                    var raw_tx_and_hash = {};
+                    if (signed.version === 1) {
+                        raw_tx_and_hash.raw = cnUtil.serialize_tx(signed);
+                        raw_tx_and_hash.hash = cnUtil.cn_fast_hash(raw_tx);
+                        raw_tx_and_hash.prvkey = signed.prvkey;
+                        raw_tx_and_hash.no_outputs = signed.vout.length;
+                        raw_tx_and_hash.no_inputs = signed.vin.length;
+                    } else {
+                        raw_tx_and_hash = cnUtil.serialize_rct_tx_with_hash(signed);
                     }
                 }
                 try {
