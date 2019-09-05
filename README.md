@@ -1,9 +1,7 @@
 # Beldex Wallet - a lightweight web wallet for Beldex based on OpenMonero 
 
 In this example [restbed](https://github.com/Corvusoft/restbed/) is used to
-demonstrate how to provide Beldex related JSON REST service. For this purpose,
- a service called Beldex Locker was developed.
-
+demonstrate how to provide Beldex related JSON REST service. 
 
 Beldex Locker is an open source implementation of backend of
 https://mymonero.com/ adapted for Beldex. The frontend, which includes HTML, CSS, JavaScript, was adapted
@@ -191,7 +189,7 @@ Before running `beldex-web-wallet`:
  - set `apiUrl` in `html\js\config.js` and `nettype` option. Last slash `/` in `apiUrl` is important.
  If running backend for testnet or stagenet networks, frontend `nettype` must be set to  
  1 - TESTNET or 2 - STAGENET. 0 is for MAINNET.
- - make sure Beldex daemon is running and fully sync. If using testnet or stagenet networks, use Loki daemon
+ - make sure Beldex daemon is running and fully sync. If using testnet or stagenet networks, use Beldex daemon
  with `--testnet` or `--stagenet` flags!
 
 
