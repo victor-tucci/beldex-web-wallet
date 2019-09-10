@@ -20,11 +20,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
-<<<<<<< HEAD:sql/openbeldex.sql
 -- Database: `beldexlocker`
-=======
--- Database: `openloki`
->>>>>>> 916938344212c3368e2f1e8dc60ec8fdbaf5e5a2:sql/openloki.sql
 --
 
 CREATE DATABASE IF NOT EXISTS `beldexlocker` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;

@@ -3,7 +3,7 @@ var config = {
     mainnetExplorerUrl: "https://explorer.beldex.io/",
     testnetExplorerUrl: "",
     stagenetExplorerUrl: "",
-    nettype: 1, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
+    nettype: 0, /* 0 - MAINNET, 1 - TESTNET, 2 - STAGENET */
     coinUnitPlaces: 9,
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Loki
     txCoinbaseMinConfirms: 30, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Loki

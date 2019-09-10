@@ -73,7 +73,7 @@ CurrentBlockchainStatus::update_current_blockchain_height()
 bool
 CurrentBlockchainStatus::init_beldex_blockchain()
 {
-    // set loki log output level
+    // set beldex log output level
     uint32_t log_level = 0;
     mlog_configure(mlog_get_default_log_path(""), true);
 

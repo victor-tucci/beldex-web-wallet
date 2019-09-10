@@ -676,7 +676,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 {
                     //create random destination to keep 2 outputs always in case of 0 change
                     var fakeAddress = cnUtil.create_address(cnUtil.random_scalar()).public_addr;
-                    console.log("Sending 0 LOKI to a fake address to keep tx uniform (no change exists): " + fakeAddress);
+                    console.log("Sending 0 BDX to a fake address to keep tx uniform (no change exists): " + fakeAddress);
                     dsts.push({
                         address: fakeAddress,
                         amount: 0
