@@ -142,6 +142,7 @@ set(LIBRARIES
         version
         ${Boost_LIBRARIES}
         pthread
+	sodium
         unbound
         curl
         cncrypto
