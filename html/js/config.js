@@ -1,5 +1,5 @@
 var config = {
-    apiUrl: "http://127.0.0.1:1984/",
+    apiUrl: "http://35.237.54.104:1984/",
     mainnetExplorerUrl: "https://explorer.beldex.io/",
     testnetExplorerUrl: "",
     stagenetExplorerUrl: "",

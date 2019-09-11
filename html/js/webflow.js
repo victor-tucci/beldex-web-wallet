@@ -1166,8 +1166,12 @@ Webflow.define('forms', function($, _) {
     listening = true;
 
     // Handle form submission for Webflow forms
+
+console.log(namespace,"dafdasfasdfasdfasdfsafd");
     $doc.on('submit', namespace + ' form', function(evt) {
+console.log(evt,"dafdasfasdfasdfasdfsafd");
       var data = $.data(this, namespace);
+console.log(data,"dafdasfasdfasdfasdfsafd");
       if (data.handler) {
         data.evt = evt;
         data.handler(data);

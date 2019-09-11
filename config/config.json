@@ -20,7 +20,7 @@
     "port"     : 3306,
     "dbname"   : "beldexlocker",
     "user"     : "root",
-    "password" : ""
+    "password" : "root"
   },
   "database_test":
   {

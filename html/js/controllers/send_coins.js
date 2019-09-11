@@ -26,99 +26,10 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-class HostedMoneroAPIClient
+thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q,
+                                                     AccountService, ModalService,
+                                                     ApiCalls)
 {
-    constructor(options)
-    {
-        const self = this
-        self.$http = options.$http
-        if (self.$http == null || typeof self.$http === 'undefined') {
-            throw "self.$http required"
-        }
-    }
-    UnspentOuts(parameters, fn)
-    { // -> RequestHandle
-        const self = this
-        const endpointPath = 'get_unspent_outs'
-        self.$http.post(config.apiUrl + endpointPath, parameters).then(
-            function(data)
-            {
-                fn(null, data.data)
-            }
-        ).catch(
-            function(data)
-            {
-                fn(data && data.data.Error
-                    ? data.data.Error
-                    : "Something went wrong with getting your available balance for spending");
-            }
-        );
-        const requestHandle =
-        {
-            abort: function()
-            {
-                console.warn("TODO: abort!")
-            }
-        }
-        return requestHandle
-    }
-    RandomOuts(parameters, fn)
-    { // -> RequestHandle
-        const self = this
-        const endpointPath = 'get_random_outs'
-        self.$http.post(config.apiUrl + endpointPath, parameters).then(
-            function(data)
-            {
-                fn(null, data.data)
-            }
-        ).catch(
-            function(data)
-            {
-                fn(data
-                    && data.data.Error
-                    ? data.data.Error
-                    : "Something went wrong while getting decoy outputs");
-            }
-        );
-        const requestHandle =
-        {
-            abort: function()
-            {
-                console.warn("TODO: abort!")
-            }
-        }
-        return requestHandle
-    }
-    SubmitRawTx(parameters, fn)
-    {
-        const self = this
-        const endpointPath = 'submit_raw_tx'
-        self.$http.post(config.apiUrl + endpointPath, parameters).then(
-            function(data)
-            {
-                fn(null, data.data)
-            }
-        ).catch(
-            function(data)
-            {
-                //console.log("submit_raw_data_error:", data);
-                fn(data && data.data.Error
-                    ? data.data.Error
-                    : "Something went wrong while submitting your transaction");
-            }
-        );
-        const requestHandle =
-        {
-            abort: function()
-            {
-                console.warn("TODO: abort!")
-            }
-        }
-        return requestHandle
-    }
-}
-
-thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountService) {
     "use strict";
     $scope.status = "";
     $scope.error = "";
@@ -151,6 +62,13 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
     $scope.priority = default_priority.toString();
 
     $scope.openaliasDialog = undefined;
+
+    function isInt(value) {
+        return !isNaN(value) &&
+            parseInt(Number(value)) == value &&
+            !isNaN(parseInt(value, 10));
+    }
+
 
     function confirmOpenAliasAddress(domain, address, name, description, dnssec_used) {
         var deferred = $q.defer();
@@ -351,17 +269,18 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
 
         // Transaction will need at least 1KB fee (13KB for RingCT)
 
-    $scope.sendCoins = function(targets, payment_id)
-    {
-        if ($scope.submitting) {
-            console.warn("Already submitting")
+        var feePerKB = new JSBigInt(config.feePerKB);
+
+        var priority = $scope.priority || default_priority;
+
+        if (!isInt(priority))
+        {
+            $scope.submitting = false;
+            $scope.error = "Priority is not an integer number";
             return;
         }
-        $scope.status = "";
-        $scope.error = "";
-        $scope.submitting = true;
-        //
-        mymonero_core_js.monero_utils_promise.then(function(coreBridge_instance)
+
+        if (!(priority >= 1 && priority <= 4))
         {
             $scope.submitting = false;
             $scope.error = "Priority is not between 1 and 4";
@@ -388,38 +307,45 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 $scope.error = "You need to enter a valid destination";
                 return;
             }
-            const target = targets[0]
-            if (!target.address && !target.amount) {
-                throw "Target address and amount required.";
-            }
-            function fn(err, mockedTransaction, optl_domain)
-            { // this function handles all termination of sendCoins(), except for canceled_fn()
-                if (err) {
-                    console.error("Err:", err)
-                    $scope.status = "";
-                    $scope.error = "Something unexpected occurred when sending funds: " + (err.Error || err);
-                    $scope.submitting = false;
-                    return
-                }
-                console.log("Tx succeeded", mockedTransaction)
-                $scope.targets = [{}];
-                $scope.sent_tx = {
-                    address: mockedTransaction.target_address,
-                    domain: optl_domain,
-                    amount: mockedTransaction.total_sent, // it's expecting a JSBigInt back so it can `| money`
-                    payment_id: mockedTransaction.payment_id,
-                    tx_id: mockedTransaction.hash,
-                    tx_fee: mockedTransaction.tx_fee,
-                    tx_key: mockedTransaction.tx_key
-                };
-                $scope.success_page = true;
-                $scope.status = "";
-                $scope.submitting = false;
-            }
-            function canceled_fn()
+            if (payment_id)
             {
-                $scope.status = "Canceled";
+                if (payment_id.length <= 64 && /^[0-9a-fA-F]+$/.test(payment_id))
+                {
+                    // if payment id is shorter, but has correct number, just
+                    // pad it to required length with zeros
+                    payment_id = strpad(payment_id, "0", 64);
+                }
+
+                // now double check if ok, when we padded it
+                if (payment_id.length !== 64 || !(/^[0-9a-fA-F]{64}$/.test(payment_id)))
+                {
+                    $scope.submitting = false;
+                    $scope.error = "The payment ID you've entered is not valid";
+                    return;
+                }
+
+            }
+            if (realDsts.length === 1) {//multiple destinations aren't supported by MyMonero, but don't include integrated ID anyway (possibly should error in the future)
+                var decode_result = cnUtil.decode_address(realDsts[0].address);
+                if (decode_result.intPaymentId && payment_id) {
+                    $scope.submitting = false;
+                    $scope.error = "Payment ID field must be blank when using an Integrated Address";
+                    return;
+                } else if (decode_result.intPaymentId) {
+                    payment_id = decode_result.intPaymentId;
+                    pid_encrypt = true; //encrypt if using an integrated address
+                }
+            }
+            if (totalAmountWithoutFee.compare(0) <= 0) {
                 $scope.submitting = false;
+                $scope.error = "The amount you've entered is too low";
+                return;
+            }
+            $scope.status = "Generating transaction...";
+            console.log("Destinations: ");
+            // Log destinations to console
+            for (var j = 0; j < realDsts.length; j++) {
+                console.log(realDsts[j].address + ": " + cnUtil.formatMoneyFull(realDsts[j].amount));
             }
             var getUnspentOutsRequest = {
                 address: AccountService.getAddress(),
@@ -451,54 +377,49 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         $scope.error = data.Error;
                         console.warn(data.Error);
                     } else {
-                        console.log("DNSSEC Not used");
+                        $scope.error = "Something went wrong with getting your available balance for spending";
                     }
-                    for (var i = 0; i < records.length; i++) {
-                        var record = records[i];
-                        if (record.slice(0, 4 + config.openAliasPrefix.length + 1) !== "oa1:" + config.openAliasPrefix + " ") {
-                            continue;
-                        }
-                        console.log("Found OpenAlias record: " + record);
-                        oaRecords.push(parseOpenAliasRecord(record));
-                    }
-                    if (oaRecords.length === 0) {
-                        fn("No OpenAlias records found for: " + domain);
-                        return;
-                    }
-                    if (oaRecords.length !== 1) {
-                        fn("Multiple addresses found for given domain: " + domain);
-                        return;
-                    }
-                    console.log("OpenAlias record: ", oaRecords[0]);
-                    var oaAddress = oaRecords[0].address;
-                    try {
-                        coreBridge_instance.decode_address(oaAddress, config.nettype);
-                        confirmOpenAliasAddress(
-                            domain,
-                            oaAddress,
-                            oaRecords[0].name,
-                            oaRecords[0].description,
-                            data.dnssec_used && data.secured
-                        ).then(
-                            function()
-                            {
-                                sendTo(oaAddress, amount, domain);
-                            },
-                            function(err)
-                            {
-                                fn(err);
-                                return;
-                            }
-                        );
-                    } catch (e) {
-                        fn("Failed to decode OpenAlias address: " + oaRecords[0].address + ": " + e);
-                        return;
-                    }
-                }).catch(function(data) {
-                    fn("Failed to resolve DNS records for '" + domain + "': " + ((data || {}).Error || data || "Unknown error"));
-                    return
                 });
-                return
+        }, function(err) {
+            $scope.submitting = false;
+            $scope.error = err;
+            console.log("Error decoding targets: " + err);
+        });
+
+        function checkUnspentOuts(outputs) {
+            for (var i = 0; i < outputs.length; i++) {
+                for (var j = 0; outputs[i] && j < outputs[i].spend_key_images.length; j++) {
+                    var key_img = AccountService.cachedKeyImage(outputs[i].tx_pub_key, outputs[i].index);
+                    if (key_img === outputs[i].spend_key_images[j]) {
+                        console.log("Output was spent with key image: " + key_img + " amount: " + cnUtil.formatMoneyFull(outputs[i].amount));
+                        // Remove output from list
+                        outputs.splice(i, 1);
+                        if (outputs[i]) {
+                            j = outputs[i].spend_key_images.length;
+                        }
+                        i--;
+                    } else {
+                        console.log("Output used as mixin (" + key_img + "/" + outputs[i].spend_key_images[j] + ")");
+                    }
+                }
+            }
+            console.log("Unspent outs: " + JSON.stringify(outputs));
+            return outputs;
+        }
+
+        function transferSuccess(tx_h) {
+            var prevFee = neededFee;
+            var raw_tx = tx_h.raw;
+            var tx_hash = tx_h.hash;
+            var tx_prvkey = tx_h.prvkey;
+            var no_inputs = tx_h.no_inputs;
+            var no_outputs = tx_h.no_outputs;
+            // work out per-kb fee for transaction
+            var txBlobBytes = raw_tx.length / 2;
+            var txBlobKBytes = txBlobBytes / 1024.0;
+            var numKB = Math.floor(txBlobKBytes);
+            if (txBlobBytes % 1024) {
+                numKB++;
             }
             console.log(txBlobBytes + " bytes <= " + numKB + " KB (current fee: " + cnUtil.formatMoneyFull(prevFee) + ")");
             neededFee = feePerKB.multiply(numKB).multiply(fee_multiplier);
@@ -637,38 +558,45 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     console.log("New fee: " + cnUtil.formatMoneySymbol(newNeededFee) + " for " + using_outs.length + " inputs");
                     neededFee = newNeededFee;
                 }
-                //
-                _configureWith_statusUpdate(statusUpdate_messageBase);
-                //
-                const sec_keys = AccountService.getSecretKeys()
-                const pub_keys = AccountService.getPublicKeys()
-                const apiClient = new HostedMoneroAPIClient({ $http: $http })
-                var parsed_amount;
-                try {
-                    parsed_amount = mymonero_core_js.monero_amount_format_utils.parseMoney(target.amount);
-                } catch (e) {
-                    fn("Please enter a valid amount");
-                    return
-                }
-                const send_args =
+
+                if (using_outs_amount.compare(totalAmount) < 0)
                 {
-                    is_sweeping: sweeping,
-                    payment_id_string: payment_id, // passed in
-                    sending_amount: sweeping ? 0 : parsed_amount.toString(), // sending amount
-                    from_address_string: AccountService.getAddress(),
-                    sec_viewKey_string: sec_keys.view,
-                    sec_spendKey_string: sec_keys.spend,
-                    pub_spendKey_string: pub_keys.spend,
-                    to_address_string: target_address,
-                    priority: 1,
-                    unlock_time: 0, // unlock_time
-                    nettype: config.nettype,
-                    //
-                    get_unspent_outs_fn: function(req_params, cb)
+                    deferred.reject("Not enough spendable outputs / balance too low (have "
+                        + cnUtil.formatMoneyFull(using_outs_amount) + " but need "
+                        + cnUtil.formatMoneyFull(totalAmount)
+                        + " (estimated fee " + cnUtil.formatMoneyFull(neededFee) + " included)");
+                    return;
+                }
+                else if (using_outs_amount.compare(totalAmount) > 0)
+                {
+                    var changeAmount = using_outs_amount.subtract(totalAmount);
+
+                    if (!rct)
+                    {   //for rct we don't presently care about dustiness
+                        //do not give ourselves change < dust threshold
+                        var changeAmountDivRem = changeAmount.divRem(config.dustThreshold);
+                        if (changeAmountDivRem[1].toString() !== "0") {
+                            // add dusty change to fee
+                            console.log("Adding change of " + cnUtil.formatMoneyFullSymbol(changeAmountDivRem[1]) + " to transaction fee (below dust threshold)");
+                        }
+                        if (changeAmountDivRem[0].toString() !== "0") {
+                            // send non-dusty change to our address
+                            var usableChange = changeAmountDivRem[0].multiply(config.dustThreshold);
+                            console.log("Sending change of " + cnUtil.formatMoneySymbol(usableChange) + " to " + AccountService.getAddress());
+                            dsts.push({
+                                address: AccountService.getAddress(),
+                                amount: usableChange
+                            });
+                        }
+                    }
+                    else
                     {
-                        apiClient.UnspentOuts(req_params, function(err_msg, res)
-                        {
-                            cb(err_msg, res);
+                        //add entire change for rct
+                        console.log("Sending change of " + cnUtil.formatMoneySymbol(changeAmount)
+                            + " to " + AccountService.getAddress());
+                        dsts.push({
+                            address: AccountService.getAddress(),
+                            amount: changeAmount
                         });
                     }
                 }
@@ -676,7 +604,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 {
                     //create random destination to keep 2 outputs always in case of 0 change
                     var fakeAddress = cnUtil.create_address(cnUtil.random_scalar()).public_addr;
-                    console.log("Sending 0 BDX to a fake address to keep tx uniform (no change exists): " + fakeAddress);
+                    console.log("Sending 0 LOKI to a fake address to keep tx uniform (no change exists): " + fakeAddress);
                     dsts.push({
                         address: fakeAddress,
                         amount: 0
@@ -754,16 +682,13 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     } else {
                         raw_tx_and_hash = cnUtil.serialize_rct_tx_with_hash(signed);
                     }
+                    console.log("raw_tx and hash:");
+                    console.log(raw_tx_and_hash);
+                    deferred.resolve(raw_tx_and_hash);
                 }
-                try {
-                    // verify that the address is valid
-                    coreBridge_instance.async__send_funds(send_args);
-                } catch (e) {
-                    fn("Failed to send with exception: " + e);
-                    return;
-                }
-            }
-        })
+            })();
+            return deferred.promise;
+        }
     };
 });
 
@@ -788,3 +713,4 @@ function parseOpenAliasRecord(record) {
     parsed.description = parse_param('tx_description');
     return parsed;
 }
+
