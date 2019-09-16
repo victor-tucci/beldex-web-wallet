@@ -6,7 +6,7 @@
 
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "openloki"
+#define MONERO_DEFAULT_LOG_CATEGORY "openbeldex"
 
 namespace xmreg
 {
@@ -71,7 +71,7 @@ CurrentBlockchainStatus::update_current_blockchain_height()
 }
 
 bool
-CurrentBlockchainStatus::init_loki_blockchain()
+CurrentBlockchainStatus::init_beldex_blockchain()
 {
     // initialize the core using the blockchain path
     return mcore->init(bc_setup.blockchain_path, bc_setup.net_type);}
@@ -629,7 +629,7 @@ CurrentBlockchainStatus::search_if_payment_made(
 
             // if mine output has RingCT, i.e., tx version is 2
             // need to decode its amount. otherwise its zero.
-            if (mine_output && tx.version >= cryptonote::txversion::v2_ringct)
+            if (mine_output && tx.version >= 2)
             {
                 // initialize with regular amount
                 uint64_t rct_amount = amount;
@@ -1048,7 +1048,7 @@ CurrentBlockchainStatus::construct_output_rct_field(
     string rtc_mask(64, '0');
     string rtc_amount(64, '0');
 
-    if (random_output_tx.version > cryptonote::txversion::v1 && !is_coinbase(random_output_tx))
+    if (random_output_tx.version > 1 && !is_coinbase(random_output_tx))
     {
         rtc_outpk  = pod_to_hex(random_output_tx.rct_signatures
                                 .outPk[output_idx_in_tx].mask);

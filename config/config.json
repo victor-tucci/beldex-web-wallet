@@ -2,9 +2,9 @@
   "daemon-url" :
   {
     "_comment" : "RPC urls to monero deamon",
-    "mainnet"  : "http://127.0.0.1:22023",
-    "testnet"  : "http://127.0.0.1:38157",
-    "stagenet" : "http://127.0.0.1:38154"
+    "mainnet"  : "http://127.0.0.1:19091",
+    "testnet"  : "http://127.0.0.1:29091",
+    "stagenet" : "http://127.0.0.1:39091"
   },
   "blockchain-path" :
   {
@@ -18,22 +18,22 @@
     "_comment" : "how should the backend connect to the mysql database",
     "url"      : "127.0.0.1",
     "port"     : 3306,
-    "dbname"   : "lokilocker",
+    "dbname"   : "beldexlocker",
     "user"     : "root",
-    "password" : ""
+    "password" : "root"
   },
   "database_test":
   {
     "_comment" : "how should the backend connect to the test mysql database",
     "url"      : "127.0.0.1",
     "port"     : 3306,
-    "dbname"   : "openloki_test",
+    "dbname"   : "openbeldex_test",
     "user"     : "root",
-    "password" : ""
+    "password" : "root"
   },
   "wallet_import" :
   {
-    "_comment": "if fee is 0, then importing is free. fee is in base 1e9, e.g., 0.1 LOKI is 0.1 x 1e9 = 100000000",
+    "_comment": "if fee is 0, then importing is free. fee is in base 1e9, e.g., 0.1 BELDEX is 0.1 x 1e9 = 100000000",
     "fee"     : 0,
     "testnet" :
     {

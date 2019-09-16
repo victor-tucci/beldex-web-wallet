@@ -1,25 +1,27 @@
 cmake_minimum_required(VERSION 3.2)
 
 set(PROJECT_NAME
-        loki-locker)
+        beldex-web-wallet)
 
 project(${PROJECT_NAME})
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fsanitize=address")
 set(CMAKE_CXX_STANDARD 14)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL "4")
   add_definitions(-DMDB_VL32)
 endif()
 
-if (NOT LOKI_DIR)
-    set(LOKI_DIR ~/loki)
+if (NOT BELDEX_DIR)
+    set(BELDEX_DIR ~/beldex)
 endif()
 
 option(BUILD_TEST "Build tests for the project" OFF)
 
-message(STATUS LOKI_DIR ": ${LOKI_DIR}")
+message(STATUS BELDEX_DIR ": ${BELDEX_DIR}")
 
-set(MONERO_SOURCE_DIR ${LOKI_DIR}
+set(MONERO_SOURCE_DIR ${BELDEX_DIR}
         CACHE PATH "Path to the root directory for Monero")
 
 # set location of monero build tree
@@ -49,12 +51,8 @@ endif()
 
 find_package(Monero)
 
-find_package(MYSQL)
+find_package(MySQL++)
 
-if (NOT MYSQL_INCLUDE_DIR)
-    message(SEND_ERROR "MySQL libraries not found! Please install mysql++/mysqlpp libraries")
-    return()
-endif()
 
 include_directories(${MYSQL_INCLUDE_DIR})
 
@@ -68,12 +66,17 @@ include_directories(
     ${MONERO_SOURCE_DIR}/build
     /usr/local/include
     /usr/local/include/mysql
+    /usr/include/mysql++
+    /usr/include/mysql
     /usr/local/opt/openssl/include
-)
+
+    )
 
 link_directories(
     ${MONERO_BUILD_DIR}/src/crypto
     /usr/local/lib
+    /usr/include/mysql++
+    /usr/lib/mysql
     /usr/local/opt/openssl/lib
 )
 
@@ -123,22 +126,21 @@ set(LIBRARIES
         blocks
         lmdb
         ringct
-        ringct_basic
-        common
-        mnemonics
+	ringct_basic
+	common
+	mnemonics
         epee
         easylogging
         mysqlpp
         mysqlclient
         device
-        randomx
         epee
         checkpoints
         version       
-        sodium
         ${Boost_LIBRARIES}
         pthread
-        unbound
+        sodium
+	unbound
         curl
         cncrypto
         ssl
@@ -147,7 +149,7 @@ set(LIBRARIES
 if(APPLE)
     set(LIBRARIES ${LIBRARIES} "-framework IOKit -framework Foundation")
 else()
-    set(LIBRARIES ${LIBRARIES} atomic)
+    set(LIBRARIES ${LIBRARIES} atomic pcsclite)
 endif()
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT WIN32)
