@@ -52,6 +52,7 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
     $scope.error = "";
 
 
+
     // var private_view_key = AccountService.getViewKey();
     
 
@@ -212,7 +213,6 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
 
                     var transactions = data.transactions || [];
-
                     for (var i = 0; i < transactions.length; ++i) {
                         if ((transactions[i].spent_outputs || []).length > 0)
                         {
@@ -226,8 +226,8 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
                                     );
                                     if (transactions[i].spent_outputs[j].key_image !== key_image)
                                     {
-                                        transactions[i].total_sent = new JSBigInt(transactions[i].total_sent)
-                                            .subtract(transactions[i].spent_outputs[j].amount).toString();
+                                        //transactions[i].total_sent = new JSBigInt(transactions[i].total_sent)
+                                        //    .subtract(transactions[i].spent_outputs[j].amount).toString();   #why substract ?
                                         transactions[i].spent_outputs.splice(j, 1);
                                         j--;
                                     }
@@ -256,9 +256,9 @@ thinwalletCtrls.controller('AccountCtrl', function($scope, $rootScope, $http, $q
 
                             if (new JSBigInt(transactions[i].total_received || 0).add(transactions[i].total_sent || 0).compare(0) <= 0)
                             {
-                                transactions.splice(i, 1);
-                                i--;
-                                continue;
+                                //transactions.splice(i, 1);
+                                //i--;
+                                //continue;
                             }
 
 

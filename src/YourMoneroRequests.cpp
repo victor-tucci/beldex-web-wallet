@@ -244,7 +244,6 @@ YourMoneroRequests::get_address_txs(
                     acc.id.data, txs))
         {
             json j_txs = json::array();
-
             /* For per-output unlocks:
              * This code makes the (somewhat naive) assumption that there will be
              * at most one locked and one unlocked received output per transaction,
@@ -255,31 +254,31 @@ YourMoneroRequests::get_address_txs(
             for (XmrTransaction const& tx: txs)
             {
                 vector<XmrOutput> tx_outs;
-
+				bool some_locked = false, some_unlocked = false;
+                uint64_t locked_amount = 0, unlocked_amount = 0, unlock_time_for_locked = 0;
                 // this shouldn't ever be false or we wouldn't be looking at this tx,
                 // but sanity checks are cheap
-                if (!xmr_accounts->select_for_tx(tx.id.data, tx_outs))
+                if (xmr_accounts->select_for_tx(tx.id.data, tx_outs))
                 {
-                    continue;
+					for (XmrOutput const& tx_out : tx_outs)
+					{
+						if (current_bc_status->is_tx_unlocked(tx_out.unlock_time, tx.height))
+						{
+							some_unlocked = true;
+							unlocked_amount += tx_out.amount;
+						}
+						else
+						{
+							some_locked = true;
+							locked_amount += tx_out.amount;
+							unlock_time_for_locked = tx_out.unlock_time;
+						}
+					}
                 }
 
-                bool some_locked = false, some_unlocked = false;
-                uint64_t locked_amount = 0, unlocked_amount = 0, unlock_time_for_locked = 0;
 
-                for (XmrOutput const& tx_out : tx_outs)
-                {
-                    if (current_bc_status->is_tx_unlocked(tx_out.unlock_time, tx.height))
-                    {
-                        some_unlocked = true;
-                        unlocked_amount += tx_out.amount;
-                    }
-                    else
-                    {
-                        some_locked = true;
-                        locked_amount += tx_out.amount;
-                        unlock_time_for_locked = tx_out.unlock_time;
-                    }
-                }
+
+
 
                 json j_tx {
                         {"id"             , tx.blockchain_tx_id},
