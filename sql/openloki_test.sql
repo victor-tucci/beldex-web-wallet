@@ -19,9 +19,7 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `openloki_test`
---
+
 
 CREATE DATABASE IF NOT EXISTS `openmonero_test` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE `openmonero_test`;
