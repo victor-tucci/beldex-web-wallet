@@ -95,8 +95,8 @@ we can just do it now, to see if it compiles. But don't run it yet. It will not
 work without database, setup frontend, and synced and running Beldex blockchain.
 
 ```bash
-# need mysql++ library gcovr (for code coverage)
-sudo apt install libmysql++-dev gcovr
+# need mysql++ library
+sudo apt install libmysql++-dev
 
 
 # go to home folder if still in ~/beldex
@@ -171,13 +171,17 @@ Command line options
   -h [ --help ] [=arg(=1)] (=0)         produce help message
   -t [ --testnet ] [=arg(=1)] (=0)      use testnet blockchain
   -s [ --stagenet ] [=arg(=1)] (=0)     use stagenet blockchain
-  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes.
-                                        useful when testing construction and
+  --do-not-relay [=arg(=1)] (=0)        does not relay txs to other nodes. 
+                                        useful when testing construction and 
                                         submiting txs
   -p [ --port ] arg (=1984)             default port for restbed service of
                                         beldex Wallet
   -c [ --config-file ] arg (=./config/config.json)
                                         Config file path.
+  -m [ --monero-log-level ] arg (=1)    Monero log level 1-4, default is 1.
+  -l [ --log-file ] arg (=./openmonero.log)
+                                        Name and path to log file. -l "" to 
+                                        disable log file.
 ```
 
 Other backend options are in `confing/config.json`.
@@ -258,14 +262,26 @@ var api_minor = response.data.api & 0xffff;
 Login an existing or new user into Beldex Web Wallet
 
 ```bash
-curl  -w "\n" -X POST http://127.0.0.1:1984/login -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400"}'
+curl  -w "\n" -X POST http://127.0.0.1:1984/login -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400", "create_account": true, "generated_locally": true}'
 ```
 
+Example output:
 ```json
-{"new_address":false,"status":"success"}
+{"generated_locally":false,"new_address":true,"start_height":0,"status":"success"}
 ```
 
+### ping 
 
+Pings a search thread for a given account to extend its life.
+
+```bash
+curl  -w "\n" -X POST http://127.0.0.1:1984/ping -d '{"address": "A2VTvE8bC9APsWFn3mQzgW8Xfcy2SP2CRUArD6ZtthNaWDuuvyhtBcZ8WDuYMRt1HhcnNQvpXVUavEiZ9waTbyBhP6RM8TV", "view_key": "041a241325326f9d86519b714a9b7f78b29111551757eeb6334d39c21f8b7400"}'
+```
+
+Example output:
+```json
+{"generated_locally":false,"new_address":true,"start_height":0,"status":"success"}
+```
 #### get_address_txs
 
 Get the list of all txs for the given user with their possible spendings.

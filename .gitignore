@@ -14,6 +14,6 @@ build
 .cproject
 .project
 .settings/
+.kdev4/
 .vscode/
-error.log
-*.code-workspace
+openmonero.kdev4

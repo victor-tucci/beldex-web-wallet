@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, MyMonero.com
+s// Copyright (c) 2014-2017, MyMonero.com
 // 
 // All rights reserved.
 // 
@@ -48,12 +48,12 @@ class HostedMoneroAPIClient
         ).catch(
             function(data)
             {
-                fn(data && data.data.Error
-                    ? data.data.Error
+                fn(data && data.data.Error 
+                    ? data.data.Error 
                     : "Something went wrong with getting your available balance for spending");
             }
         );
-        const requestHandle =
+        const requestHandle = 
         {
             abort: function()
             {
@@ -75,12 +75,12 @@ class HostedMoneroAPIClient
             function(data)
             {
                 fn(data
-                    && data.data.Error
-                    ? data.data.Error
+                    && data.data.Error 
+                    ? data.data.Error 
                     : "Something went wrong while getting decoy outputs");
             }
         );
-        const requestHandle =
+        const requestHandle = 
         {
             abort: function()
             {
@@ -102,12 +102,12 @@ class HostedMoneroAPIClient
             function(data)
             {
                 //console.log("submit_raw_data_error:", data);
-                fn(data && data.data.Error
-                    ? data.data.Error
+                fn(data && data.data.Error 
+                    ? data.data.Error 
                     : "Something went wrong while submitting your transaction");
             }
         );
-        const requestHandle =
+        const requestHandle = 
         {
             abort: function()
             {
@@ -330,7 +330,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                 }
                 const send_args =
                 {
-                    is_sweeping: sweeping,
+                    is_sweeping: sweeping, 
                     payment_id_string: payment_id, // passed in
                     sending_amount: sweeping ? 0 : parsed_amount.toString(), // sending amount
                     from_address_string: AccountService.getAddress(),
@@ -339,7 +339,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                     pub_spendKey_string: pub_keys.spend,
                     to_address_string: target_address,
                     priority: 1,
-                    unlock_time: 0, // unlock_time
+                    unlock_time: 0, // unlock_time 
                     nettype: config.nettype,
                     //
                     get_unspent_outs_fn: function(req_params, cb)
@@ -381,7 +381,7 @@ thinwalletCtrls.controller('SendCoinsCtrl', function($scope, $http, $q, AccountS
                         const total_sent__JSBigInt = new JSBigInt(params.total_sent)
                         const tx_fee = new JSBigInt(params.used_fee)
                         const total_sent__atomicUnitString = total_sent__JSBigInt.toString()
-                        const total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt)
+                        const total_sent__floatString = mymonero_core_js.monero_amount_format_utils.formatMoney(total_sent__JSBigInt) 
                         const total_sent__float = parseFloat(total_sent__floatString)
                         //
                         const mockedTransaction =

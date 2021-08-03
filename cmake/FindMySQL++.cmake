@@ -8,8 +8,12 @@
 
 set(MYSQLPP_INCLUDE_DIRS "")
 
+<<<<<<< HEAD
 
 foreach(component  mysql++.h  mysql.h mysql_version.h) 
+=======
+foreach(component  mysql++.h  mysql.h) 
+>>>>>>> upstream/master
 
     FIND_PATH(MYSQLPP_INCLUDE_${component} 
         NAMES ${component} 
@@ -33,8 +37,11 @@ foreach(component  mysqlpp mysqlclient)
     FIND_LIBRARY(MYSQL_LIBRARY_${component}
         NAMES ${component}
        PATHS 
+<<<<<<< HEAD
        /usr/include/mysql
        /usr/include/mysql++
+=======
+>>>>>>> upstream/master
        /usr/lib 
        /usr/local/lib 
        /opt/mysql++
@@ -45,6 +52,7 @@ foreach(component  mysqlpp mysqlclient)
 
 endforeach()
 
+<<<<<<< HEAD
 if( MYSQLPP_INCLUDE_DIR AND EXISTS "${MYSQLPP_INCLUDE_DIRS}/mysql_version.h" )
 	file( STRINGS "${MYSQLPP_INCLUDE_DIRS}/mysql_version.h"
 		MYSQLPP_VERSION_H REGEX "^#define[ \t]+MYSQLPP_SERVER_VERSION[ \t]+\"[^\"]+\".*$" )
@@ -52,6 +60,9 @@ if( MYSQLPP_INCLUDE_DIR AND EXISTS "${MYSQLPP_INCLUDE_DIRS}/mysql_version.h" )
 		"^.*MYSQLPP_SERVER_VERSION[ \t]+\"([^\"]+)\".*$" "\\1" MYSQLPP_VERSION_STRING
 		"${MYSQLPP_VERSION_H}" )
 endif()
+=======
+
+>>>>>>> upstream/master
 
 if(MYSQLPP_INCLUDE_DIRS AND MYSQLPP_LIBRARIES)
    set(MYSQLPP_FOUND TRUE)

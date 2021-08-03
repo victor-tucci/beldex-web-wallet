@@ -37,6 +37,12 @@ namespace xmreg
                 ("config-file,c", value<string>()
                  ->default_value("./config/config.json"),
                  "Config file path.")
+                ("monero-log-level,m", value<size_t>()
+                 ->default_value(1),
+                 "Monero log level 1-4, default is 1.")
+                ("verbose,v", value<size_t>()
+                 ->default_value(0),
+                 "OpenMonero log verbose level 0-4, default is 0.")
                 ("log-file,l", value<string>()
                  ->default_value("./beldex-web-wallet.log"),
                  "Name and path to log file. -l \"\" to disable log file.");
