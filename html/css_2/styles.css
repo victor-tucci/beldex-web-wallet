@@ -2578,7 +2578,7 @@ float: right; }
 .box-1 {
   display: block;
     margin-bottom: 50px;
-    border-radius: 3px;
+    border-radius: 10px;
     background-color: #40ce47;
     text-align: center;
     text-decoration: none;
@@ -2589,8 +2589,7 @@ float: right; }
     padding-left: 20px;
 }
   .box-1:hover {
-    background-size: auto;
-    transform: scale(1.1); }
+    background-size: auto;}
 
 .box-text {
   padding-top: 14px;
@@ -2614,7 +2613,7 @@ float: right; }
 .box-2 {
   display: block;
   margin-bottom: 50px;
-  border-radius: 3px;
+  border-radius: 10px;
   background-color: #3773f7;
   text-align: center;
   text-decoration: none;
@@ -2624,12 +2623,12 @@ float: right; }
   padding-top: 4px;
   padding-left: 20px; }
   .box-2:hover {
-    background-color: #40ce47; }
+    background-color: #3773f7; }
 
 .box-3 {
   display: block;
     margin-bottom: 50px;
-    border-radius: 3px;
+    border-radius: 10px;
     background-color: #40ce47;
     text-align: center;
     text-decoration: none;
@@ -2686,9 +2685,11 @@ float: right; }
     margin-bottom: 30px; }
 
 .middle-div {
-  padding-bottom: 0px;
-  background-color: #292938;
-  border-radius: 10px; }
+  padding-bottom: 0;
+    background-color: #292938;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px; }
   .middle-div.send {
     padding-bottom: 0px;
     border-radius: 10px;
@@ -2909,11 +2910,11 @@ float: right; }
 .send-btn {
   display: block;
   margin: 50px auto 22px;
-  padding: 20px 230px;
-  border-radius: 3px;
+  padding: 15px 230px;
+  border-radius: 10px;
   background-color: #40ce47;
   color: #000;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -3009,11 +3010,11 @@ transition: 0.4s ease; }
   font-family: 'Poppins', sans-serif !important;
   color: #fff;
   text-transform: capitalize;
-  font-weight: 500;
+  font-weight: 500; 
   text-decoration: none;
 transition: 0.4s ease; }
   .lower-nav-link:hover {
-    color: #000;
+    color: #40ce47;
     transform: scale(1.1);
    }
   .lower-nav-link:focus {
