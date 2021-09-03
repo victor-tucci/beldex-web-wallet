@@ -18,9 +18,9 @@
   <div class="header-section-mobile">
     <div class="mob-logo">
       <h2 style="font-size: 40px; color: white;">WEB WALLET</h2>
-      <p><a class="create-account-btn" href="#!/create-your-account">Create an Account</a>
+      <p><a class="create-account-btn" href="#!/create-your-account">Register</a>
       <!--Button below is a login button. Reused the create-account-btn styles -->
-      <a class="create-account-btn" ng-show="!loggedIn()" data-ix="display-login" show-modal="login">LOG IN</a></p>
+      <a class="create-account-btn blueBtn" ng-show="!loggedIn()" data-ix="display-login" show-modal="login">Login</a></p>
     </div>
     <div class="home-header">
       Fully Open Sourced<br/> 
@@ -29,26 +29,41 @@
   </div>
 
   <!-- Desktop -->
-  <div class="header-section">
-    <div class="w-container home-container">
-      <div id="home-wrapper">
-        
-        <div id="home-tr">
-          <div class="wallet-text">
+  <div class="w-container">
+    <div class="bel-column">
+      <div class="header-section">
+        <div class="w-container home-container">
+          <div id="home-wrapper">
             
-            <h2 class="ml2">WEB WALLET</h2>
-            <p><a class="create-account-btn" href="#!/create-your-account">Create an Account</a></p>
-            
+            <div id="home-tr">
+              <div class="wallet-text">
+                
+                <h2 class="ml2">WEB</h2>
+                <h3 class="bel-h3">Wallet</h3>
+                <h4 class="bel-h4">v1.0</h4>
+                <!-- <p><a class="create-account-btn" href="#!/create-your-account">Create an Account</a></p> -->
+                
+              </div>
+              <div class="home-header">
+                Fully Open Sourced Light Beldex <br/> 
+                Web Wallet
+              </div>
+              <div class="bel-para">
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              </div>
+              <div class="bel-button">
+                <p><a class="create-account-btn" href="#!/create-your-account">Register</a></p> 
+              </div>
+            </div>
           </div>
-          <div class="home-header">
-            Fully Open Sourced<br/> 
-            Light Beldex Web Wallet
+          <div id="home-wrapper">
+            
           </div>
         </div>
       </div>
-      <div id="home-wrapper">
-        
-      </div>
+    </div>
+    <div class="bel-column" style="text-align: right;">
+        <img src="images/bel-wallet.png" class="bel-fluid">
     </div>
   </div>
 </div>
