@@ -27,27 +27,27 @@
         }
         .wallet-V2
         {
-            max-width: 940px;
-            background: #fff;
-            color: #000;
-            min-width: 90px;
-            transform: translate(10px, -5px);
-            height: 25px;
+            background: #40ce47;
+            color: #000 !important;
+            min-width: 105px;
+            transform: translate(10px, -4px);
+            height: 32px;
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            border-radius: 3px;
-            box-shadow: 0px 0px 16px rgb(255 255 255 / 43%);
+            border-radius: 5px;
+            box-shadow: none;
             transition: 0.4s;
+            margin-left: 10px;
         } 
-         .wallet-V2:hover
-         {
-             box-shadow: 0px 0px 30px rgb(255 255 255 / 43%);
-        }           
+                   
         .nav-link.login
         {
-            background: transparent !important;
+            background: #3773f7;
             color: #fff !important;
+            height: 32px;
+            padding-top: 10px;
+            margin-left: 22px;
         }
         .nav-link.login:hover {
         transform: scale(1) !important;
@@ -117,14 +117,15 @@ type="text/javascript"></script>
 <div class="w-nav nav" data-collapse="small" data-animation="default" data-duration="400" data-contain="1">
     <div class="w-container">
         <nav class="w-nav-menu nav-menu" role="navigation">
-            <a class="w-nav-link nav-link wallet-V2" href="https://walletv2.beldex.io/">WALLET V2.0</a>
-            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('create-your-account')" href="#!/create-your-account">CREATE NEW ACCOUNT</a>
-            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('support')" href="#!/support">SUPPORT</a>
-            <a class="w-nav-link nav-link pointer login" ng-show="!loggedIn()" data-ix="display-login" show-modal="login">LOG IN</a>
+            
+            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('create-your-account')" href="#!/create-your-account">Register</a>
+            <a class="w-nav-link nav-link" ng-show="!loggedIn()" ng-class="currentPage('support')" href="#!/support">Support</a>
+            <a class="w-nav-link nav-link wallet-V2" href="https://walletv2.beldex.io/">Wallet V2.0</a>
+            <a class="w-nav-link nav-link pointer login" ng-show="!loggedIn()" data-ix="display-login" show-modal="login">Login</a>
 
             <div class="w-dropdown" ng-show="loggedIn()" data-delay="0">
                 <div class="w-dropdown-toggle dropdown-toggle">
-                    <div>ACCOUNT</div>
+                    <div>Account</div>
                     <div class="w-icon-dropdown-toggle arrow-icon-style"></div>
                 </div>
                 <nav class="w-dropdown-list dropdown-rounded">
@@ -159,7 +160,7 @@ type="text/javascript"></script>
             <div class="w-row">
                 <div class="w-col w-col-4 middle-footer first-col">
                     <div class="copyright-text">
-                        Copyright, Beldex Web Wallet 2020
+                        Copyright, Beldex Web Wallet 2021
                     </div>
                 </div>
 
