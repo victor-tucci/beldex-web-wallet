@@ -3038,11 +3038,12 @@ transition: 0.4s ease; }
 color: #000; }
 
 .dropdown-toggle {
-  margin-top: 19px;
-    padding: 3px 40px 3px 15px;
+  margin-top: 23px;
+    padding: 3px 35px 3px 15px;
     border-radius: 7px;
-    color: white;
-    font-weight: 600; }
+    color: #fff;
+    font-weight: 600;
+    margin-left: 10px; }
   .dropdown-toggle:hover {
     color: #008522;
     border-color: #008522; }
@@ -4191,4 +4192,10 @@ font-size: 30px; }
     line-height: 34px;
     margin-top: 50px;
   }
+}
+
+.supp-link
+{
+  margin-left: 15px;
+  transform: translate(-5px, 0px);
 }
