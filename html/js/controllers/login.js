@@ -98,7 +98,7 @@ thinwalletCtrls.controller("LoginCtrl", function($scope, $location, AccountServi
                     ModalService.show('imported-account');
                 }
             }, function(response) {
-                $scope.error = "Error connecting to the backend. Can't login.";
+                $scope.error =  "Please try login after 30 seconds";
                 //console.error(response);
             });
     };
