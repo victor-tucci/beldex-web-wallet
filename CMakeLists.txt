@@ -135,6 +135,7 @@ set(LIBRARIES
         mysqlclient
         device
         epee
+	rpc
         checkpoints
         version       
         ${Boost_LIBRARIES}
